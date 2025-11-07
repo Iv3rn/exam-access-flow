@@ -36,7 +36,7 @@ serve(async (req) => {
     // Find patient by CPF (accept formatted or unformatted)
     const { data: patient, error: patientError } = await supabase
       .from('patients')
-      .select('*')
+      .select('user_id, full_name, cpf')
       .or(`cpf.eq.${digits},cpf.eq.${formatted}`)
       .single()
 
@@ -44,51 +44,21 @@ serve(async (req) => {
       throw new Error('Paciente não encontrado')
     }
 
-    // Check password
-    const isValidPassword =
-      password === (patient.temporary_password || '') ||
-      password === (patient.fixed_password || '')
-
-    if (!isValidPassword) {
-      throw new Error('Senha inválida')
+    if (!patient.user_id) {
+      throw new Error('Paciente não possui usuário vinculado')
     }
 
     // Build deterministic auth email for patient based on CPF
     const authEmail = `patient+${digits}@patients.local`
 
-    // Try to create or update auth user with current password
-    const { data: createdUser, error: createError } = await supabase.auth.admin.createUser({
+    // Verify password by attempting sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: authEmail,
       password: password,
-      email_confirm: true,
-      user_metadata: { full_name: patient.full_name, cpf: patient.cpf },
     })
 
-    let userId = createdUser?.user?.id || ''
-
-    if (createError) {
-      // If already exists, fetch and update password
-      const { data: users } = await supabase.auth.admin.listUsers()
-      const existingUser = users?.users.find(u => u.email === authEmail)
-      if (existingUser) {
-        userId = existingUser.id
-        await supabase.auth.admin.updateUserById(existingUser.id, { password })
-      } else {
-        throw createError
-      }
-    }
-
-    // Map auth user to patient record
-    if (userId) {
-      await supabase
-        .from('patients')
-        .update({ user_id: userId })
-        .or(`cpf.eq.${digits},cpf.eq.${formatted}`)
-
-      await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: 'patient', active: true })
-        
+    if (signInError) {
+      throw new Error('Senha inválida')
     }
 
     return new Response(

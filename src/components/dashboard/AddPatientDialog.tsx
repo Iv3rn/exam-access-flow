@@ -32,16 +32,19 @@ const AddPatientDialog = ({ open, onOpenChange, onSuccess }: AddPatientDialogPro
         throw new Error("Usuário não autenticado");
       }
 
-      const { error } = await supabase.from("patients").insert({
-        cpf,
-        full_name: fullName,
-        email,
-        phone,
-        temporary_password: tempPassword,
-        created_by: user.id,
+      const { data, error } = await supabase.functions.invoke('create-patient', {
+        body: {
+          cpf,
+          full_name: fullName,
+          email,
+          phone,
+          password: tempPassword,
+          created_by: user.id,
+        }
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Paciente cadastrado!",

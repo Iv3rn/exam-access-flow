@@ -61,11 +61,9 @@ export type Database = {
           created_at: string
           created_by: string
           email: string | null
-          fixed_password: string | null
           full_name: string
           id: string
           phone: string | null
-          temporary_password: string | null
           updated_at: string
           user_id: string | null
         }
@@ -74,11 +72,9 @@ export type Database = {
           created_at?: string
           created_by: string
           email?: string | null
-          fixed_password?: string | null
           full_name: string
           id?: string
           phone?: string | null
-          temporary_password?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -87,11 +83,9 @@ export type Database = {
           created_at?: string
           created_by?: string
           email?: string | null
-          fixed_password?: string | null
           full_name?: string
           id?: string
           phone?: string | null
-          temporary_password?: string | null
           updated_at?: string
           user_id?: string | null
         }
