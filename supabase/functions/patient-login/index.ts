@@ -23,85 +23,53 @@ serve(async (req) => {
       }
     )
 
-    const { cpf, password } = await req.json()
+    const body = await req.json()
+    const cpfInput: string = (body?.cpf ?? '').toString()
+    const password: string = (body?.password ?? '').toString()
 
-    // Find patient by CPF
+    // Normalize CPF (digits only) and build formatted version 000.000.000-00
+    const digits = cpfInput.replace(/\D/g, '')
+    const formatted = digits.length === 11
+      ? `${digits.slice(0,3)}.${digits.slice(3,6)}.${digits.slice(6,9)}-${digits.slice(9,11)}`
+      : cpfInput
+
+    // Find patient by CPF (accept formatted or unformatted)
     const { data: patient, error: patientError } = await supabase
-      .from("patients")
-      .select("*")
-      .eq("cpf", cpf)
+      .from('patients')
+      .select('*')
+      .or(`cpf.eq.${cpfInput},cpf.eq.${formatted}`)
       .single()
 
     if (patientError || !patient) {
-      throw new Error("Paciente não encontrado")
+      throw new Error('Paciente não encontrado')
     }
 
     // Check password
-    const isValidPassword = 
-      password === patient.temporary_password || 
+    const isValidPassword =
+      password === patient.temporary_password ||
       password === patient.fixed_password
 
     if (!isValidPassword) {
-      throw new Error("Senha inválida")
+      throw new Error('Senha inválida')
     }
 
-    // Check if user exists in auth.users
-    let userId = patient.id
-    
-    // If patient doesn't have auth user, create one
-    const { data: existingUsers } = await supabase.auth.admin.listUsers()
-    const existingUser = existingUsers?.users.find(u => u.email === patient.email)
-    
-    if (!existingUser && patient.email) {
-      // Create auth user for patient
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Ensure auth user exists (create if missing). Ignore error if already exists
+    if (patient.email) {
+      const created = await supabase.auth.admin.createUser({
         email: patient.email,
-        password: patient.fixed_password || patient.temporary_password,
+        password: password, // use the password the patient typed
         email_confirm: true,
-        user_metadata: {
-          full_name: patient.full_name,
-          cpf: patient.cpf,
-        },
+        user_metadata: { full_name: patient.full_name, cpf: patient.cpf },
       })
-
-      if (authError) throw authError
-      
-      userId = authData.user.id
-
-      // Create patient role
-      await supabase
-        .from("user_roles")
-        .insert({
-          user_id: userId,
-          role: "patient",
-          active: true,
-        })
-    } else if (existingUser) {
-      userId = existingUser.id
+      if (created.error && !`${created.error.message}`.toLowerCase().includes('already')) {
+        // If it's not the "user already exists" case, throw
+        throw created.error
+      }
     }
-
-    // Generate session token by signing in
-    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
-      email: patient.email || '',
-      password: patient.fixed_password || patient.temporary_password || '',
-    })
-
-    if (sessionError) throw sessionError
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        session: sessionData.session,
-        patient: {
-          id: patient.id,
-          full_name: patient.full_name,
-          cpf: patient.cpf,
-        }
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+      JSON.stringify({ success: true, email: patient.email }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     )
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido'

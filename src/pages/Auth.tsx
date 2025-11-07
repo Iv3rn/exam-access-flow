@@ -50,12 +50,13 @@ const Auth = () => {
 
         if (error) throw error;
 
-        // Set session
-        if (data.session) {
-          await supabase.auth.setSession({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token,
-          });
+        // Set session: sign in client-side using returned email
+        if (data?.email) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password,
+          })
+          if (signInError) throw signInError
         }
 
         toast({
