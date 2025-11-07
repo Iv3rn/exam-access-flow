@@ -24,33 +24,12 @@ const AddStaffDialog = ({ open, onOpenChange, onSuccess }: AddStaffDialogProps) 
     setLoading(true);
 
     try {
-      // Create user account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
+      // Call edge function to create staff without logging out admin
+      const { data, error } = await supabase.functions.invoke('create-staff', {
+        body: { email, password, fullName }
       });
 
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error("Erro ao criar usuário");
-      }
-
-      // Assign staff role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({
-          user_id: authData.user.id,
-          role: "staff",
-          active: true,
-        });
-
-      if (roleError) throw roleError;
+      if (error) throw error;
 
       toast({
         title: "Funcionário adicionado!",

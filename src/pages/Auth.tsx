@@ -10,7 +10,9 @@ import { Activity } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isPatientLogin, setIsPatientLogin] = useState(false);
   const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,27 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isLogin && isPatientLogin) {
+        // Patient login with CPF
+        const { data, error } = await supabase.functions.invoke('patient-login', {
+          body: { cpf, password }
+        });
+
+        if (error) throw error;
+
+        // Set session
+        if (data.session) {
+          await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+        }
+
+        toast({
+          title: "Login realizado com sucesso!",
+        });
+      } else if (isLogin) {
+        // Staff/Admin login with email
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -42,7 +64,6 @@ const Auth = () => {
         toast({
           title: "Login realizado com sucesso!",
         });
-        // Não navega aqui - deixa o Dashboard detectar a autenticação
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -87,6 +108,27 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {isLogin && (
+            <div className="flex gap-2 mb-4">
+              <Button
+                type="button"
+                variant={!isPatientLogin ? "default" : "outline"}
+                onClick={() => setIsPatientLogin(false)}
+                className="flex-1"
+              >
+                Funcionário/Admin
+              </Button>
+              <Button
+                type="button"
+                variant={isPatientLogin ? "default" : "outline"}
+                onClick={() => setIsPatientLogin(true)}
+                className="flex-1"
+              >
+                Paciente
+              </Button>
+            </div>
+          )}
+          
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
@@ -100,16 +142,31 @@ const Auth = () => {
                 />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+            
+            {isLogin && isPatientLogin ? (
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  value={cpf}
+                  onChange={(e) => setCpf(e.target.value)}
+                  placeholder="000.000.000-00"
+                  required
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
@@ -124,17 +181,20 @@ const Auth = () => {
               {loading ? "Carregando..." : isLogin ? "Entrar" : "Cadastrar"}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <Button
-              variant="link"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm"
-            >
-              {isLogin
-                ? "Não tem conta? Cadastre-se"
-                : "Já tem conta? Faça login"}
-            </Button>
-          </div>
+          
+          {!isPatientLogin && (
+            <div className="mt-4 text-center">
+              <Button
+                variant="link"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm"
+              >
+                {isLogin
+                  ? "Não tem conta? Cadastre-se"
+                  : "Já tem conta? Faça login"}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
