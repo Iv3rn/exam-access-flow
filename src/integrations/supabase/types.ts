@@ -154,6 +154,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_patient_with_email: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "staff" | "patient"
