@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, FileText, Activity, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -92,26 +90,23 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="exams" className="w-full">
-          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-            <TabsTrigger value="exams" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Exames ({examCount})
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" />
-              Laudos ({reportCount})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="exams" className="mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Exames ({examCount})</h2>
+            </div>
             {patientId && <ExamList patientId={patientId} />}
-          </TabsContent>
-
-          <TabsContent value="reports" className="mt-6">
+          </div>
+          
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">Laudos ({reportCount})</h2>
+            </div>
             {patientId && <ReportList patientId={patientId} />}
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </main>
     </div>
   );
