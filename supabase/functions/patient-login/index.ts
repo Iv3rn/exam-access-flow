@@ -55,15 +55,39 @@ serve(async (req) => {
 
     // Ensure auth user exists (create if missing). Ignore error if already exists
     if (patient.email) {
-      const created = await supabase.auth.admin.createUser({
+      // Try to create or update auth user with current password
+      const { data: userData, error: createError } = await supabase.auth.admin.createUser({
         email: patient.email,
-        password: password, // use the password the patient typed
+        password: password,
         email_confirm: true,
         user_metadata: { full_name: patient.full_name, cpf: patient.cpf },
       })
-      if (created.error && !`${created.error.message}`.toLowerCase().includes('already')) {
-        // If it's not the "user already exists" case, throw
-        throw created.error
+
+      // If user already exists, update password
+      if (createError && createError.message.toLowerCase().includes('already')) {
+        // Get existing user
+        const { data: users } = await supabase.auth.admin.listUsers()
+        const existingUser = users?.users.find(u => u.email === patient.email)
+        
+        if (existingUser) {
+          // Update password to match what patient typed
+          await supabase.auth.admin.updateUserById(existingUser.id, {
+            password: password
+          })
+        }
+      } else if (createError) {
+        throw createError
+      }
+
+      // Ensure user has patient role
+      if (userData?.user) {
+        await supabase
+          .from('user_roles')
+          .upsert({
+            user_id: userData.user.id,
+            role: 'patient',
+            active: true,
+          }, { onConflict: 'user_id' })
       }
     }
 
