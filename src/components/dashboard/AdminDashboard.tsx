@@ -3,12 +3,11 @@ import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Users, UserPlus } from "lucide-react";
+import { LogOut, Users, UserPlus, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import StaffList from "./StaffList";
 import AddStaffDialog from "./AddStaffDialog";
-import logoDark from "@/assets/logo-dark.png";
 
 interface AdminDashboardProps {
   user: User;
@@ -46,8 +45,8 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
     <div className="min-h-screen bg-medical-light">
       <header className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <img src={logoDark} alt="InovAI" className="h-8" />
+          <div className="flex items-center gap-3">
+            <Activity className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold text-primary">Painel Administrativo</h1>
           </div>
           <Button variant="outline" onClick={handleLogout}>
