@@ -25,13 +25,11 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
 
   const fetchPatientData = async () => {
     try {
-      // Get patient data from user metadata or find by email
-      const cpf = user.user_metadata?.cpf;
-      
+      // Link patient by auth user id
       const { data: patient, error } = await supabase
         .from("patients")
         .select("*")
-        .or(cpf ? `cpf.eq.${cpf},email.eq.${user.email}` : `email.eq.${user.email}`)
+        .eq("user_id", user.id)
         .single();
 
       if (error) throw error;

@@ -37,7 +37,7 @@ serve(async (req) => {
     const { data: patient, error: patientError } = await supabase
       .from('patients')
       .select('*')
-      .or(`cpf.eq.${cpfInput},cpf.eq.${formatted}`)
+      .or(`cpf.eq.${digits},cpf.eq.${formatted}`)
       .single()
 
     if (patientError || !patient) {
@@ -46,53 +46,53 @@ serve(async (req) => {
 
     // Check password
     const isValidPassword =
-      password === patient.temporary_password ||
-      password === patient.fixed_password
+      password === (patient.temporary_password || '') ||
+      password === (patient.fixed_password || '')
 
     if (!isValidPassword) {
       throw new Error('Senha inválida')
     }
 
-    // Ensure auth user exists (create if missing). Ignore error if already exists
-    if (patient.email) {
-      // Try to create or update auth user with current password
-      const { data: userData, error: createError } = await supabase.auth.admin.createUser({
-        email: patient.email,
-        password: password,
-        email_confirm: true,
-        user_metadata: { full_name: patient.full_name, cpf: patient.cpf },
-      })
+    // Build deterministic auth email for patient based on CPF
+    const authEmail = `patient+${digits}@patients.local`
 
-      // If user already exists, update password
-      if (createError && createError.message.toLowerCase().includes('already')) {
-        // Get existing user
-        const { data: users } = await supabase.auth.admin.listUsers()
-        const existingUser = users?.users.find(u => u.email === patient.email)
-        
-        if (existingUser) {
-          // Update password to match what patient typed
-          await supabase.auth.admin.updateUserById(existingUser.id, {
-            password: password
-          })
-        }
-      } else if (createError) {
+    // Try to create or update auth user with current password
+    const { data: createdUser, error: createError } = await supabase.auth.admin.createUser({
+      email: authEmail,
+      password: password,
+      email_confirm: true,
+      user_metadata: { full_name: patient.full_name, cpf: patient.cpf },
+    })
+
+    let userId = createdUser?.user?.id || ''
+
+    if (createError) {
+      // If already exists, fetch and update password
+      const { data: users } = await supabase.auth.admin.listUsers()
+      const existingUser = users?.users.find(u => u.email === authEmail)
+      if (existingUser) {
+        userId = existingUser.id
+        await supabase.auth.admin.updateUserById(existingUser.id, { password })
+      } else {
         throw createError
-      }
-
-      // Ensure user has patient role
-      if (userData?.user) {
-        await supabase
-          .from('user_roles')
-          .upsert({
-            user_id: userData.user.id,
-            role: 'patient',
-            active: true,
-          }, { onConflict: 'user_id' })
       }
     }
 
+    // Map auth user to patient record
+    if (userId) {
+      await supabase
+        .from('patients')
+        .update({ user_id: userId })
+        .or(`cpf.eq.${digits},cpf.eq.${formatted}`)
+
+      await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role: 'patient', active: true })
+        
+    }
+
     return new Response(
-      JSON.stringify({ success: true, email: patient.email }),
+      JSON.stringify({ success: true, email: authEmail }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
     )
   } catch (error) {

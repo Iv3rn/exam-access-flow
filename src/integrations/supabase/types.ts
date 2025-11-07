@@ -67,6 +67,7 @@ export type Database = {
           phone: string | null
           temporary_password: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           cpf: string
@@ -79,6 +80,7 @@ export type Database = {
           phone?: string | null
           temporary_password?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           cpf?: string
@@ -91,6 +93,7 @@ export type Database = {
           phone?: string | null
           temporary_password?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
