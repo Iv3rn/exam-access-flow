@@ -7,6 +7,15 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import FilePreviewDialog from "./FilePreviewDialog";
 
+interface Report {
+  id: string;
+  title: string;
+  description: string;
+  file_path: string;
+  file_type: string;
+  created_at: string;
+}
+
 interface Exam {
   id: string;
   exam_type: string;
@@ -14,6 +23,7 @@ interface Exam {
   file_path: string;
   file_type: string;
   created_at: string;
+  reports?: Report[];
 }
 
 interface ExamListProps {
@@ -32,15 +42,28 @@ const ExamList = ({ patientId }: ExamListProps) => {
 
   const fetchExams = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: examsData, error: examsError } = await supabase
         .from("exams")
         .select("*")
         .eq("patient_id", patientId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (examsError) throw examsError;
 
-      setExams(data || []);
+      // Fetch reports for each exam
+      const examsWithReports = await Promise.all(
+        (examsData || []).map(async (exam) => {
+          const { data: reports } = await supabase
+            .from("reports")
+            .select("*")
+            .eq("exam_id", exam.id)
+            .order("created_at", { ascending: false });
+
+          return { ...exam, reports: reports || [] };
+        })
+      );
+
+      setExams(examsWithReports);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar exames",
@@ -89,7 +112,7 @@ const ExamList = ({ patientId }: ExamListProps) => {
                   })}
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  Visualizar
+                  Visualizar Exame
                 </Button>
               </div>
               <CardDescription className="flex items-center gap-2">
@@ -97,11 +120,42 @@ const ExamList = ({ patientId }: ExamListProps) => {
                 {format(new Date(exam.created_at), "dd/MM/yyyy 'às' HH:mm")}
               </CardDescription>
             </CardHeader>
-            {exam.description && (
-              <CardContent>
+            <CardContent className="space-y-4">
+              {exam.description && (
                 <p className="text-sm text-muted-foreground">{exam.description}</p>
-              </CardContent>
-            )}
+              )}
+              
+              {exam.reports && exam.reports.length > 0 && (
+                <div className="border-t pt-4 space-y-3">
+                  <h4 className="text-sm font-semibold text-foreground">Laudos Associados:</h4>
+                  {exam.reports.map((report) => (
+                    <div key={report.id} className="bg-muted/50 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium">{report.title}</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPreviewFile({ 
+                            path: report.file_path, 
+                            type: report.file_type,
+                            name: report.title 
+                          })}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Ver Laudo
+                        </Button>
+                      </div>
+                      {report.description && (
+                        <p className="text-xs text-muted-foreground">{report.description}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(report.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
           </Card>
         ))}
       </div>

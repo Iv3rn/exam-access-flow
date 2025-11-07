@@ -125,6 +125,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          exam_id: string | null
           file_path: string
           file_type: string
           id: string
@@ -136,6 +137,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          exam_id?: string | null
           file_path: string
           file_type: string
           id?: string
@@ -147,6 +149,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          exam_id?: string | null
           file_path?: string
           file_type?: string
           id?: string
@@ -156,6 +159,13 @@ export type Database = {
           uploaded_by?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reports_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reports_patient_id_fkey"
             columns: ["patient_id"]

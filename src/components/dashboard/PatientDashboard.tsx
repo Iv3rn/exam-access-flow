@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, FileText, Activity, ClipboardList } from "lucide-react";
+import { LogOut, FileText, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ExamList from "./ExamList";
-import ReportList from "./ReportList";
 
 interface PatientDashboardProps {
   user: User;
@@ -16,7 +15,6 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
   const [patientId, setPatientId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState("");
   const [examCount, setExamCount] = useState(0);
-  const [reportCount, setReportCount] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -45,14 +43,6 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
         .eq("patient_id", patient.id);
 
       setExamCount(examCount || 0);
-
-      // Count reports
-      const { count: reportCount } = await supabase
-        .from("reports")
-        .select("*", { count: "exact", head: true })
-        .eq("patient_id", patient.id);
-
-      setReportCount(reportCount || 0);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar dados",
@@ -90,23 +80,11 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Exames ({examCount})</h2>
-            </div>
-            {patientId && <ExamList patientId={patientId} />}
-          </div>
-          
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <ClipboardList className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Laudos ({reportCount})</h2>
-            </div>
-            {patientId && <ReportList patientId={patientId} />}
-          </div>
+        <div className="flex items-center gap-2 mb-6">
+          <FileText className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-semibold">Meus Exames e Laudos ({examCount})</h2>
         </div>
+        {patientId && <ExamList patientId={patientId} />}
       </main>
     </div>
   );

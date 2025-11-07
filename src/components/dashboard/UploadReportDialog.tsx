@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface Patient {
   id: string;
@@ -17,14 +19,39 @@ interface UploadReportDialogProps {
   onOpenChange: (open: boolean) => void;
   patient: Patient;
   onSuccess: () => void;
+  examId?: string;
 }
 
-const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess }: UploadReportDialogProps) => {
+const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess, examId }: UploadReportDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [exams, setExams] = useState<Array<{ id: string; exam_type: string; created_at: string }>>([]);
+  const [selectedExamId, setSelectedExamId] = useState<string>(examId || "");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open && !examId) {
+      fetchExams();
+    }
+  }, [open, patient.id, examId]);
+
+  useEffect(() => {
+    if (examId) {
+      setSelectedExamId(examId);
+    }
+  }, [examId]);
+
+  const fetchExams = async () => {
+    const { data } = await supabase
+      .from("exams")
+      .select("id, exam_type, created_at")
+      .eq("patient_id", patient.id)
+      .order("created_at", { ascending: false });
+
+    setExams(data || []);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +105,7 @@ const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess }: UploadRe
       // Create report record
       const { error: reportError } = await supabase.from("reports").insert({
         patient_id: patient.id,
+        exam_id: selectedExamId || null,
         title,
         description,
         file_path: fileName,
@@ -95,6 +123,7 @@ const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess }: UploadRe
       setTitle("");
       setDescription("");
       setFile(null);
+      setSelectedExamId("");
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
@@ -118,6 +147,23 @@ const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess }: UploadRe
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!examId && exams.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="exam">Vincular a um Exame (opcional)</Label>
+              <Select value={selectedExamId} onValueChange={setSelectedExamId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um exame..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {exams.map((exam) => (
+                    <SelectItem key={exam.id} value={exam.id}>
+                      {exam.exam_type} - {format(new Date(exam.created_at), "dd/MM/yyyy")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="title">Título do Laudo</Label>
             <Input
