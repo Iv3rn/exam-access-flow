@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ExamList from "./ExamList";
+import logoDark from "@/assets/logo-dark.png";
 
 interface PatientDashboardProps {
   user: User;
@@ -66,9 +67,12 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
     <div className="min-h-screen bg-medical-light">
       <header className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-primary">Portal do Paciente</h1>
-            <p className="text-sm text-muted-foreground">{patientName}</p>
+          <div className="flex items-center gap-4">
+            <img src={logoDark} alt="InovAI" className="h-8" />
+            <div>
+              <h1 className="text-2xl font-bold text-primary">Portal do Paciente</h1>
+              <p className="text-sm text-muted-foreground">{patientName}</p>
+            </div>
           </div>
           <Button variant="outline" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />

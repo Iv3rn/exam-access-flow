@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import StaffList from "./StaffList";
 import AddStaffDialog from "./AddStaffDialog";
+import logoDark from "@/assets/logo-dark.png";
 
 interface AdminDashboardProps {
   user: User;
@@ -45,7 +46,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
     <div className="min-h-screen bg-medical-light">
       <header className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Painel Administrativo</h1>
+          <div className="flex items-center gap-4">
+            <img src={logoDark} alt="InovAI" className="h-8" />
+            <h1 className="text-2xl font-bold text-primary">Painel Administrativo</h1>
+          </div>
           <Button variant="outline" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Sair
