@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogOut, FileText, Activity, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ExamList from "./ExamList";
-import logoDark from "@/assets/logo-dark.png";
+import ReportList from "./ReportList";
 
 interface PatientDashboardProps {
   user: User;
@@ -17,6 +18,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
   const [patientId, setPatientId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState("");
   const [examCount, setExamCount] = useState(0);
+  const [reportCount, setReportCount] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -39,12 +41,20 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
       setPatientName(patient.full_name);
 
       // Count exams
-      const { count } = await supabase
+      const { count: examCount } = await supabase
         .from("exams")
         .select("*", { count: "exact", head: true })
         .eq("patient_id", patient.id);
 
-      setExamCount(count || 0);
+      setExamCount(examCount || 0);
+
+      // Count reports
+      const { count: reportCount } = await supabase
+        .from("reports")
+        .select("*", { count: "exact", head: true })
+        .eq("patient_id", patient.id);
+
+      setReportCount(reportCount || 0);
     } catch (error: any) {
       toast({
         title: "Erro ao carregar dados",
@@ -67,8 +77,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
     <div className="min-h-screen bg-medical-light">
       <header className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <img src={logoDark} alt="InovAI" className="h-8" />
+          <div className="flex items-center gap-3">
+            <Activity className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-2xl font-bold text-primary">Portal do Paciente</h1>
               <p className="text-sm text-muted-foreground">{patientName}</p>
@@ -82,21 +92,26 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Meus Exames
-              </CardTitle>
-              <CardDescription>
-                Você tem {examCount} {examCount === 1 ? 'exame' : 'exames'} disponível
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
+        <Tabs defaultValue="exams" className="w-full">
+          <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+            <TabsTrigger value="exams" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Exames ({examCount})
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Laudos ({reportCount})
+            </TabsTrigger>
+          </TabsList>
 
-        {patientId && <ExamList patientId={patientId} />}
+          <TabsContent value="exams" className="mt-6">
+            {patientId && <ExamList patientId={patientId} />}
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-6">
+            {patientId && <ReportList patientId={patientId} />}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

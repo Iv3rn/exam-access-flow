@@ -7,43 +7,43 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import FilePreviewDialog from "./FilePreviewDialog";
 
-interface Exam {
+interface Report {
   id: string;
-  exam_type: string;
+  title: string;
   description: string;
   file_path: string;
   file_type: string;
   created_at: string;
 }
 
-interface ExamListProps {
+interface ReportListProps {
   patientId: string;
 }
 
-const ExamList = ({ patientId }: ExamListProps) => {
-  const [exams, setExams] = useState<Exam[]>([]);
+const ReportList = ({ patientId }: ReportListProps) => {
+  const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewFile, setPreviewFile] = useState<{ path: string; type: string; name: string } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchExams();
+    fetchReports();
   }, [patientId]);
 
-  const fetchExams = async () => {
+  const fetchReports = async () => {
     try {
       const { data, error } = await supabase
-        .from("exams")
+        .from("reports")
         .select("*")
         .eq("patient_id", patientId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      setExams(data || []);
+      setReports(data || []);
     } catch (error: any) {
       toast({
-        title: "Erro ao carregar exames",
+        title: "Erro ao carregar laudos",
         description: error.message,
         variant: "destructive",
       });
@@ -53,16 +53,16 @@ const ExamList = ({ patientId }: ExamListProps) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Carregando exames...</div>;
+    return <div className="text-center py-8">Carregando laudos...</div>;
   }
 
-  if (exams.length === 0) {
+  if (reports.length === 0) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
           <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground">
-            Nenhum exame disponível no momento.
+            Nenhum laudo disponível no momento.
           </p>
         </CardContent>
       </Card>
@@ -72,20 +72,20 @@ const ExamList = ({ patientId }: ExamListProps) => {
   return (
     <>
       <div className="space-y-4">
-        {exams.map((exam) => (
-          <Card key={exam.id}>
+        {reports.map((report) => (
+          <Card key={report.id}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">{exam.exam_type}</CardTitle>
+                  <CardTitle className="text-lg">{report.title}</CardTitle>
                 </div>
                 <Button
                   size="sm"
                   onClick={() => setPreviewFile({ 
-                    path: exam.file_path, 
-                    type: exam.file_type,
-                    name: exam.exam_type 
+                    path: report.file_path, 
+                    type: report.file_type,
+                    name: report.title 
                   })}
                 >
                   <Eye className="h-4 w-4 mr-2" />
@@ -94,12 +94,12 @@ const ExamList = ({ patientId }: ExamListProps) => {
               </div>
               <CardDescription className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                {format(new Date(exam.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                {format(new Date(report.created_at), "dd/MM/yyyy 'às' HH:mm")}
               </CardDescription>
             </CardHeader>
-            {exam.description && (
+            {report.description && (
               <CardContent>
-                <p className="text-sm text-muted-foreground">{exam.description}</p>
+                <p className="text-sm text-muted-foreground">{report.description}</p>
               </CardContent>
             )}
           </Card>
@@ -119,4 +119,4 @@ const ExamList = ({ patientId }: ExamListProps) => {
   );
 };
 
-export default ExamList;
+export default ReportList;

@@ -17,6 +17,7 @@ interface StaffDashboardProps {
 const StaffDashboard = ({ user }: StaffDashboardProps) => {
   const [patientCount, setPatientCount] = useState(0);
   const [examCount, setExamCount] = useState(0);
+  const [reportCount, setReportCount] = useState(0);
   const [showAddPatient, setShowAddPatient] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -34,8 +35,13 @@ const StaffDashboard = ({ user }: StaffDashboardProps) => {
       .from("exams")
       .select("*", { count: "exact", head: true });
 
+    const { count: reports } = await supabase
+      .from("reports")
+      .select("*", { count: "exact", head: true });
+
     setPatientCount(patients || 0);
     setExamCount(exams || 0);
+    setReportCount(reports || 0);
   };
 
   const handleLogout = async () => {
@@ -90,17 +96,22 @@ const StaffDashboard = ({ user }: StaffDashboardProps) => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Ações Rápidas
+                <FileText className="h-5 w-5" />
+                Laudos
               </CardTitle>
-              <CardDescription>Gerencie pacientes</CardDescription>
+              <CardDescription>Total de laudos enviados</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => setShowAddPatient(true)} className="w-full">
-                Novo Paciente
-              </Button>
+              <p className="text-4xl font-bold text-primary">{reportCount}</p>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="mb-6">
+          <Button onClick={() => setShowAddPatient(true)} size="lg">
+            <UserPlus className="mr-2 h-5 w-5" />
+            Novo Paciente
+          </Button>
         </div>
 
         <PatientList onUpdate={fetchCounts} />

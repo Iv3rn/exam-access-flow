@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Upload } from "lucide-react";
+import { Upload, FileUp, ClipboardPlus, MoreVertical } from "lucide-react";
 import UploadExamDialog from "./UploadExamDialog";
+import UploadReportDialog from "./UploadReportDialog";
 
 interface Patient {
   id: string;
@@ -22,7 +24,8 @@ interface PatientListProps {
 const PatientList = ({ onUpdate }: PatientListProps) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [showUpload, setShowUpload] = useState(false);
+  const [showUploadExam, setShowUploadExam] = useState(false);
+  const [showUploadReport, setShowUploadReport] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -49,9 +52,14 @@ const PatientList = ({ onUpdate }: PatientListProps) => {
     setLoading(false);
   };
 
-  const handleUploadClick = (patient: Patient) => {
+  const handleUploadExamClick = (patient: Patient) => {
     setSelectedPatient(patient);
-    setShowUpload(true);
+    setShowUploadExam(true);
+  };
+
+  const handleUploadReportClick = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setShowUploadReport(true);
   };
 
   if (loading) {
@@ -83,14 +91,23 @@ const PatientList = ({ onUpdate }: PatientListProps) => {
                   <TableCell>{patient.email || "N/A"}</TableCell>
                   <TableCell>{patient.phone || "N/A"}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUploadClick(patient)}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Enviar Exame
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleUploadExamClick(patient)}>
+                          <FileUp className="h-4 w-4 mr-2" />
+                          Enviar Exame
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUploadReportClick(patient)}>
+                          <ClipboardPlus className="h-4 w-4 mr-2" />
+                          Enviar Laudo
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
@@ -100,15 +117,26 @@ const PatientList = ({ onUpdate }: PatientListProps) => {
       </Card>
 
       {selectedPatient && (
-        <UploadExamDialog
-          open={showUpload}
-          onOpenChange={setShowUpload}
-          patient={selectedPatient}
-          onSuccess={() => {
-            onUpdate();
-            fetchPatients();
-          }}
-        />
+        <>
+          <UploadExamDialog
+            open={showUploadExam}
+            onOpenChange={setShowUploadExam}
+            patient={selectedPatient}
+            onSuccess={() => {
+              onUpdate();
+              fetchPatients();
+            }}
+          />
+          <UploadReportDialog
+            open={showUploadReport}
+            onOpenChange={setShowUploadReport}
+            patient={selectedPatient}
+            onSuccess={() => {
+              onUpdate();
+              fetchPatients();
+            }}
+          />
+        </>
       )}
     </>
   );
