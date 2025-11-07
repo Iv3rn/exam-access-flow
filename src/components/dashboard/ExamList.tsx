@@ -52,13 +52,25 @@ const ExamList = ({ patientId }: ExamListProps) => {
 
   const handleDownload = async (filePath: string, examType: string) => {
     try {
-      const { data, error } = await supabase.storage
-        .from("exam-files")
-        .download(filePath);
+      // Download from MinIO via edge function
+      const { data, error } = await supabase.functions.invoke('download-from-minio', {
+        body: { filePath },
+      });
 
       if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to download file');
 
-      const url = URL.createObjectURL(data);
+      // Convert base64 to blob
+      const base64 = data.fileData;
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: data.contentType });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `${examType}_${new Date().getTime()}`;
@@ -69,7 +81,7 @@ const ExamList = ({ patientId }: ExamListProps) => {
 
       toast({
         title: "Download iniciado",
-        description: "O arquivo está sendo baixado.",
+        description: "O arquivo está sendo baixado do MinIO.",
       });
     } catch (error: any) {
       toast({
