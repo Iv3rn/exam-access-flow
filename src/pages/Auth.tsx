@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Redireciona se já estiver autenticado
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/dashboard");
+      }
+    });
+  }, [navigate]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -32,9 +41,8 @@ const Auth = () => {
 
         toast({
           title: "Login realizado com sucesso!",
-          description: "Redirecionando...",
         });
-        navigate("/dashboard");
+        // Não navega aqui - deixa o Dashboard detectar a autenticação
       } else {
         const { error } = await supabase.auth.signUp({
           email,

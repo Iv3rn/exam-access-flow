@@ -30,10 +30,12 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!user) {
+    if (user === null && !loading) {
       navigate("/auth");
       return;
     }
+
+    if (!user) return;
 
     const fetchUserRole = async () => {
       const { data, error } = await supabase
@@ -54,7 +56,7 @@ const Dashboard = () => {
     };
 
     fetchUserRole();
-  }, [user, navigate]);
+  }, [user, navigate, loading]);
 
   if (loading) {
     return (
