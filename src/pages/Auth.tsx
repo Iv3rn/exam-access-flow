@@ -126,7 +126,7 @@ const Auth = () => {
                 onClick={() => setIsPatientLogin(false)}
                 className="flex-1"
               >
-                Funcionário/Admin
+                Acesso Administrativo
               </Button>
               <Button
                 type="button"
