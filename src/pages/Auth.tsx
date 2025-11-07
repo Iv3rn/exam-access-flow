@@ -20,12 +20,21 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Redireciona se já estiver autenticado
+    // Escuta mudanças de autenticação e redireciona
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        navigate("/dashboard");
+      }
+    });
+
+    // Checa sessão existente ao montar
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/dashboard");
       }
     });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
