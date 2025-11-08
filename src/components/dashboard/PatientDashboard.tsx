@@ -5,6 +5,7 @@ import { LogOut, FileText, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import ExamList from "./ExamList";
 
 interface PatientDashboardProps {
@@ -72,10 +73,13 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
               <p className="text-sm text-muted-foreground">{patientName}</p>
             </div>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </Button>
+          </div>
         </div>
       </header>
 

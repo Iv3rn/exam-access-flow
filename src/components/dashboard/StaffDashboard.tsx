@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LogOut, UserPlus, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import PatientList from "./PatientList";
 import AddPatientDialog from "./AddPatientDialog";
 import logoDark from "@/assets/logo-dark.png";
@@ -61,10 +62,13 @@ const StaffDashboard = ({ user }: StaffDashboardProps) => {
             <img src={logoDark} alt="InovAI" className="h-8" />
             <h1 className="text-2xl font-bold text-primary">Painel do Funcionário</h1>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </Button>
+          </div>
         </div>
       </header>
 
