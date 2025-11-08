@@ -1,0 +1,209 @@
+# 🚀 Deploy VPS - Sistema de Exames Médicos
+
+Este guia explica como fazer deploy do sistema em uma VPS usando **Lovable Cloud** como backend.
+
+## 📋 Pré-requisitos
+
+- VPS com Ubuntu 20.04+ ou Debian 11+
+- Acesso root (sudo)
+- Domínio apontando para o IP da VPS (opcional, mas recomendado)
+
+## ⚡ Deploy Rápido (3 passos)
+
+### 1️⃣ Preparar o código
+
+```bash
+# Na sua máquina local, faça commit das suas alterações
+git add .
+git commit -m "Preparando para deploy"
+git push
+```
+
+### 2️⃣ Configurar na VPS
+
+```bash
+# Conecte-se à sua VPS via SSH
+ssh root@seu-ip
+
+# Crie o diretório e faça upload dos arquivos
+mkdir -p /var/www/medical-system
+cd /var/www/medical-system
+
+# OPÇÃO A: Se você tem o projeto em um repositório Git
+git clone https://github.com/seu-usuario/seu-repo.git .
+
+# OPÇÃO B: Se preferir fazer upload manual via SCP
+# Na sua máquina local, execute:
+# scp -r ./* root@seu-ip:/var/www/medical-system/
+```
+
+### 3️⃣ Executar deploy
+
+```bash
+# Dentro do diretório do projeto na VPS
+cd /var/www/medical-system
+
+# Configurar variáveis de ambiente (já estão corretas)
+cp vps-deploy/.env.production.example .env.production
+
+# Editar configuração do Nginx (adicione seu domínio/IP)
+nano vps-deploy/nginx.conf
+# Altere a linha: server_name seu-dominio.com www.seu-dominio.com;
+
+# Se usar Git, edite também o script de deploy
+nano vps-deploy/deploy.sh
+# Descomente e configure a linha do git clone
+
+# Tornar script executável e executar
+chmod +x vps-deploy/deploy.sh
+sudo ./vps-deploy/deploy.sh
+```
+
+## ✅ Verificar instalação
+
+Após o script terminar, acesse:
+- **HTTP**: `http://seu-ip` ou `http://seu-dominio.com`
+
+Você deverá ver a página de login do sistema.
+
+## 🔒 Configurar HTTPS (Recomendado)
+
+```bash
+# Instalar Certbot
+sudo apt install certbot python3-certbot-nginx -y
+
+# Obter certificado SSL (gratuito)
+sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com
+
+# Renovação automática já está configurada!
+```
+
+## 🔄 Atualizar o sistema
+
+Sempre que fizer alterações no código:
+
+```bash
+# Na sua máquina local
+git push
+
+# Na VPS
+cd /var/www/medical-system
+sudo ./vps-deploy/deploy.sh
+```
+
+## 🏗️ Arquitetura
+
+```
+┌─────────────────┐
+│   Navegador     │
+└────────┬────────┘
+         │ HTTPS
+         ▼
+┌─────────────────┐
+│  VPS (Nginx)    │
+│  Frontend React │
+└────────┬────────┘
+         │ API
+         ▼
+┌─────────────────┐
+│  Lovable Cloud  │
+│  - Supabase     │
+│  - Storage      │
+│  - Auth         │
+└─────────────────┘
+```
+
+### O que roda onde?
+
+- **VPS**: Apenas o frontend (HTML/CSS/JS) servido pelo Nginx
+- **Lovable Cloud**: Backend completo (banco de dados, autenticação, storage, edge functions)
+
+## 📁 Estrutura de arquivos
+
+```
+/var/www/medical-system/        # Código fonte
+/var/www/medical-system-dist/   # Build do frontend (servido pelo Nginx)
+/etc/nginx/sites-available/medical-system  # Configuração Nginx
+/var/log/nginx/medical-system-*.log        # Logs
+```
+
+## 🐛 Troubleshooting
+
+### Erro 502 Bad Gateway
+```bash
+# Verificar logs do Nginx
+sudo tail -f /var/log/nginx/medical-system-error.log
+
+# Verificar se o Nginx está rodando
+sudo systemctl status nginx
+sudo systemctl restart nginx
+```
+
+### Página em branco
+```bash
+# Verificar se o build foi copiado corretamente
+ls -la /var/www/medical-system-dist/
+
+# Reexecutar deploy
+cd /var/www/medical-system
+sudo ./vps-deploy/deploy.sh
+```
+
+### Erro de conexão com backend
+```bash
+# Verificar se as variáveis de ambiente estão corretas
+cat .env.production
+
+# As URLs devem apontar para Lovable Cloud (cyefnznhonfqvfepfwew.supabase.co)
+```
+
+### Problemas de permissão
+```bash
+# Corrigir permissões
+sudo chown -R www-data:www-data /var/www/medical-system-dist
+```
+
+## 🔧 Comandos úteis
+
+```bash
+# Ver logs em tempo real
+sudo tail -f /var/log/nginx/medical-system-access.log
+
+# Testar configuração Nginx
+sudo nginx -t
+
+# Reiniciar Nginx
+sudo systemctl restart nginx
+
+# Ver status do Nginx
+sudo systemctl status nginx
+
+# Fazer backup
+tar -czf backup-$(date +%Y%m%d).tar.gz /var/www/medical-system-dist
+```
+
+## 📊 Monitoramento
+
+### Logs importantes:
+- **Nginx Access**: `/var/log/nginx/medical-system-access.log`
+- **Nginx Error**: `/var/log/nginx/medical-system-error.log`
+
+### Verificar uso de recursos:
+```bash
+# CPU e memória
+htop
+
+# Espaço em disco
+df -h
+
+# Conexões ativas
+ss -tunlp | grep nginx
+```
+
+## 🆘 Suporte
+
+Se encontrar problemas:
+1. Verifique os logs do Nginx
+2. Confirme que as variáveis de ambiente estão corretas
+3. Teste a conectividade com o Lovable Cloud: `curl https://cyefnznhonfqvfepfwew.supabase.co`
+4. Verifique o firewall: `sudo ufw status`
