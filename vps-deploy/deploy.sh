@@ -33,19 +33,25 @@ fi
 
 # 2. Clonar ou atualizar repositório
 APP_DIR="/var/www/medical-system"
+
+# Verificar se REPO_URL foi passado como argumento
+if [ -z "$1" ]; then
+    echo -e "${RED}❌ URL do repositório não fornecida!${NC}"
+    echo -e "${BLUE}Uso: ./deploy.sh https://github.com/seu-usuario/seu-repo.git${NC}"
+    exit 1
+fi
+
+REPO_URL="$1"
+
 if [ -d "$APP_DIR" ]; then
     echo -e "${BLUE}🔄 Atualizando código existente...${NC}"
     cd $APP_DIR
-    git pull
+    git pull origin main
 else
-    echo -e "${BLUE}📥 Clonando repositório...${NC}"
+    echo -e "${BLUE}📥 Clonando repositório de: $REPO_URL${NC}"
     mkdir -p /var/www
     cd /var/www
-    # ALTERE AQUI: coloque a URL do seu repositório
-    echo -e "${RED}⚠️  ATENÇÃO: Configure a URL do repositório no script antes de executar!${NC}"
-    echo -e "${RED}    Edite este arquivo e adicione: git clone SEU_REPOSITORIO medical-system${NC}"
-    exit 1
-    # git clone https://github.com/seu-usuario/seu-repo.git medical-system
+    git clone $REPO_URL medical-system
     cd medical-system
 fi
 

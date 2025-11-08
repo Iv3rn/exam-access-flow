@@ -5,15 +5,15 @@
 - [ ] VPS com Ubuntu (IP: `_______________`)
 - [ ] Domínio (opcional): `_______________`
 - [ ] Acesso SSH configurado
+- [ ] Repositório GitHub conectado no Lovable
 
 ## 🚀 Comandos
 
-### 1. Na sua máquina local:
+### 1. No Lovable:
 
-```bash
-# Fazer upload do projeto para a VPS
-scp -r ./* root@SEU_IP:/root/medical-system/
-```
+1. Clique em **GitHub → Connect to GitHub**
+2. Clique em **Create Repository**
+3. Copie a URL do repositório (ex: `https://github.com/seu-usuario/medical-system.git`)
 
 ### 2. Na VPS (via SSH):
 
@@ -21,21 +21,25 @@ scp -r ./* root@SEU_IP:/root/medical-system/
 # Conectar via SSH
 ssh root@SEU_IP
 
-# Mover para /var/www
-mv /root/medical-system /var/www/
+# Baixar e executar o script de deploy
+curl -o deploy-temp.sh https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/vps-deploy/deploy.sh
+chmod +x deploy-temp.sh
+./deploy-temp.sh https://github.com/SEU_USUARIO/SEU_REPO.git
+
+# OU clone manualmente e execute:
+git clone https://github.com/SEU_USUARIO/SEU_REPO.git /var/www/medical-system
+cd /var/www/medical-system
 
 # Configurar domínio/IP no Nginx
-cd /var/www/medical-system
 nano vps-deploy/nginx.conf
 # Altere: server_name seu-dominio.com;
-# Para:   server_name SEU_DOMINIO_OU_IP;
 
 # Copiar arquivo de ambiente
 cp vps-deploy/.env.production.example .env.production
 
 # Executar deploy
 chmod +x vps-deploy/deploy.sh
-./vps-deploy/deploy.sh
+./vps-deploy/deploy.sh https://github.com/SEU_USUARIO/SEU_REPO.git
 ```
 
 ### 3. Acessar:

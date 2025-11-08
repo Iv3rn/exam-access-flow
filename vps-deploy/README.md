@@ -6,57 +6,38 @@ Este guia explica como fazer deploy do sistema em uma VPS usando **Lovable Cloud
 
 - VPS com Ubuntu 20.04+ ou Debian 11+
 - Acesso root (sudo)
+- Repositório GitHub conectado no Lovable
 - Domínio apontando para o IP da VPS (opcional, mas recomendado)
 
-## ⚡ Deploy Rápido (3 passos)
+## ⚡ Deploy Rápido (2 comandos)
 
-### 1️⃣ Preparar o código
+### 1️⃣ Conectar ao GitHub (no Lovable)
 
-```bash
-# Na sua máquina local, faça commit das suas alterações
-git add .
-git commit -m "Preparando para deploy"
-git push
-```
+1. No Lovable, clique em **GitHub → Connect to GitHub**
+2. Autorize o Lovable GitHub App
+3. Clique em **Create Repository**
+4. Copie a URL do repositório (ex: `https://github.com/seu-usuario/medical-system.git`)
 
-### 2️⃣ Configurar na VPS
+### 2️⃣ Deploy na VPS
 
 ```bash
-# Conecte-se à sua VPS via SSH
+# Conecte-se à VPS
 ssh root@seu-ip
 
-# Crie o diretório e faça upload dos arquivos
-mkdir -p /var/www/medical-system
+# Clone e execute o deploy (substitua pela URL do seu repo)
+git clone https://github.com/seu-usuario/seu-repo.git /var/www/medical-system
 cd /var/www/medical-system
 
-# OPÇÃO A: Se você tem o projeto em um repositório Git
-git clone https://github.com/seu-usuario/seu-repo.git .
+# Configure seu domínio/IP
+nano vps-deploy/nginx.conf
+# Altere: server_name seu-dominio.com;
 
-# OPÇÃO B: Se preferir fazer upload manual via SCP
-# Na sua máquina local, execute:
-# scp -r ./* root@seu-ip:/var/www/medical-system/
-```
-
-### 3️⃣ Executar deploy
-
-```bash
-# Dentro do diretório do projeto na VPS
-cd /var/www/medical-system
-
-# Configurar variáveis de ambiente (já estão corretas)
+# Copie as variáveis de ambiente
 cp vps-deploy/.env.production.example .env.production
 
-# Editar configuração do Nginx (adicione seu domínio/IP)
-nano vps-deploy/nginx.conf
-# Altere a linha: server_name seu-dominio.com www.seu-dominio.com;
-
-# Se usar Git, edite também o script de deploy
-nano vps-deploy/deploy.sh
-# Descomente e configure a linha do git clone
-
-# Tornar script executável e executar
+# Execute o deploy
 chmod +x vps-deploy/deploy.sh
-sudo ./vps-deploy/deploy.sh
+./vps-deploy/deploy.sh https://github.com/seu-usuario/seu-repo.git
 ```
 
 ## ✅ Verificar instalação
@@ -80,16 +61,15 @@ sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com
 
 ## 🔄 Atualizar o sistema
 
-Sempre que fizer alterações no código:
+Sempre que fizer alterações no Lovable (sincroniza automaticamente com GitHub):
 
 ```bash
-# Na sua máquina local
-git push
-
 # Na VPS
 cd /var/www/medical-system
-sudo ./vps-deploy/deploy.sh
+sudo ./vps-deploy/deploy.sh https://github.com/seu-usuario/seu-repo.git
 ```
+
+O script automaticamente faz `git pull` e reconstrói o projeto.
 
 ## 🏗️ Arquitetura
 
