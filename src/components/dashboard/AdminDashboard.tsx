@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import StaffList from "./StaffList";
 import AddStaffDialog from "./AddStaffDialog";
 import ExamTypesList from "./ExamTypesList";
+import ClinicLogoUpload from "./ClinicLogoUpload";
 import logoInovai from "@/assets/logo-inovai.png";
 
 interface AdminDashboardProps {
@@ -118,6 +119,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
         </div>
 
         <div className="space-y-8">
+          <ClinicLogoUpload />
           <StaffList onUpdate={fetchStaffCount} />
           <ExamTypesList onUpdate={fetchExamTypesCount} />
         </div>

@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      clinic_settings: {
+        Row: {
+          clinic_name: string | null
+          created_at: string
+          id: string
+          logo_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          logo_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          logo_path?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exam_types: {
         Row: {
           active: boolean

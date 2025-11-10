@@ -17,12 +17,33 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
   const [patientId, setPatientId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState("");
   const [examCount, setExamCount] = useState(0);
+  const [clinicLogoUrl, setClinicLogoUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPatientData();
+    fetchClinicLogo();
   }, [user]);
+
+  const fetchClinicLogo = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("clinic_settings")
+        .select("logo_path")
+        .single();
+
+      if (error || !data?.logo_path) return;
+
+      const { data: urlData } = supabase.storage
+        .from("clinic-logos")
+        .getPublicUrl(data.logo_path);
+      
+      setClinicLogoUrl(urlData.publicUrl);
+    } catch (error) {
+      console.error("Erro ao buscar logo da clínica:", error);
+    }
+  };
 
   const fetchPatientData = async () => {
     try {
@@ -67,8 +88,16 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
     <div className="min-h-screen bg-medical-light">
       <header className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img src={logoInovai} alt="InovAI" className="h-8" />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <img src={logoInovai} alt="InovAI" className="h-8" />
+              {clinicLogoUrl && (
+                <>
+                  <div className="h-8 w-px bg-border" />
+                  <img src={clinicLogoUrl} alt="Logo da Clínica" className="h-8 object-contain" />
+                </>
+              )}
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-primary">Portal do Paciente</h1>
               <p className="text-sm text-muted-foreground">{patientName}</p>
