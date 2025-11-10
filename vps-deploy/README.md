@@ -2,6 +2,14 @@
 
 Este guia explica como fazer deploy do sistema em uma VPS usando **Lovable Cloud** como backend.
 
+## ⚠️ IMPORTANTE: Migração do Supabase
+
+Se você conectou seu **próprio projeto Supabase** (não está usando Lovable Cloud), veja os arquivos na raiz do projeto:
+- **`MIGRACAO_DADOS.md`** - Guia completo de migração de estrutura e dados
+- **`dados_para_inserir.sql`** - Scripts SQL para inserir os dados após criar usuários
+
+Esses arquivos contêm todas as instruções para migrar sua estrutura de banco de dados e dados existentes para o novo Supabase.
+
 ## 📋 Pré-requisitos
 
 - VPS com Ubuntu 20.04+ ou Debian 11+
