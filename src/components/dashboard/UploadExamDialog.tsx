@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,10 +22,35 @@ interface UploadExamDialogProps {
 
 const UploadExamDialog = ({ open, onOpenChange, patient, onSuccess }: UploadExamDialogProps) => {
   const [examType, setExamType] = useState("");
+  const [examTypes, setExamTypes] = useState<Array<{ id: string; name: string }>>([]);
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchExamTypes = async () => {
+      const { data, error } = await supabase
+        .from("exam_types")
+        .select("id, name")
+        .eq("active", true)
+        .order("name", { ascending: true });
+
+      if (error) {
+        toast({
+          title: "Erro ao carregar tipos de exame",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        setExamTypes(data || []);
+      }
+    };
+
+    if (open) {
+      fetchExamTypes();
+    }
+  }, [open, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,13 +151,11 @@ const UploadExamDialog = ({ open, onOpenChange, patient, onSuccess }: UploadExam
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Raio-X">Raio-X</SelectItem>
-                <SelectItem value="Tomografia">Tomografia</SelectItem>
-                <SelectItem value="Ressonância">Ressonância</SelectItem>
-                <SelectItem value="Ultrassom">Ultrassom</SelectItem>
-                <SelectItem value="Exame de Sangue">Exame de Sangue</SelectItem>
-                <SelectItem value="Laudo">Laudo Médico</SelectItem>
-                <SelectItem value="Outro">Outro</SelectItem>
+                {examTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.name}>
+                    {type.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

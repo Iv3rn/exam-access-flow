@@ -3,12 +3,13 @@ import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Users, UserPlus, Activity } from "lucide-react";
+import { LogOut, Users, UserPlus, Activity, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import StaffList from "./StaffList";
 import AddStaffDialog from "./AddStaffDialog";
+import ExamTypesList from "./ExamTypesList";
 
 interface AdminDashboardProps {
   user: User;
@@ -16,12 +17,14 @@ interface AdminDashboardProps {
 
 const AdminDashboard = ({ user }: AdminDashboardProps) => {
   const [staffCount, setStaffCount] = useState(0);
+  const [examTypesCount, setExamTypesCount] = useState(0);
   const [showAddStaff, setShowAddStaff] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchStaffCount();
+    fetchExamTypesCount();
   }, []);
 
   const fetchStaffCount = async () => {
@@ -31,6 +34,15 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
       .eq("role", "staff");
 
     setStaffCount(count || 0);
+  };
+
+  const fetchExamTypesCount = async () => {
+    const { count } = await supabase
+      .from("exam_types")
+      .select("*", { count: "exact", head: true })
+      .eq("active", true);
+
+    setExamTypesCount(count || 0);
   };
 
   const handleLogout = async () => {
@@ -61,7 +73,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
+        <div className="grid gap-6 md:grid-cols-3 mb-8">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -72,6 +84,19 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold text-primary">{staffCount}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Tipos de Exames
+              </CardTitle>
+              <CardDescription>Total de tipos de exames cadastrados</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold text-primary">{examTypesCount}</p>
             </CardContent>
           </Card>
 
@@ -91,7 +116,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </Card>
         </div>
 
-        <StaffList onUpdate={fetchStaffCount} />
+        <div className="space-y-8">
+          <StaffList onUpdate={fetchStaffCount} />
+          <ExamTypesList onUpdate={fetchExamTypesCount} />
+        </div>
       </main>
 
       <AddStaffDialog
