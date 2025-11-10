@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import logoLight from "@/assets/logo-light.png";
+import logoInovai from "@/assets/logo-inovai.png";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -114,7 +114,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={logoLight} alt="InovAI" className="h-16" />
+            <img src={logoInovai} alt="InovAI" className="h-16" />
           </div>
           <CardTitle className="text-2xl">Sistema de Exames Médicos</CardTitle>
           <CardDescription>

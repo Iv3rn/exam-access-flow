@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import PatientList from "./PatientList";
 import AddPatientDialog from "./AddPatientDialog";
-import logoDark from "@/assets/logo-dark.png";
+import logoInovai from "@/assets/logo-inovai.png";
 
 interface StaffDashboardProps {
   user: User;
@@ -59,7 +59,7 @@ const StaffDashboard = ({ user }: StaffDashboardProps) => {
       <header className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <img src={logoDark} alt="InovAI" className="h-8" />
+            <img src={logoInovai} alt="InovAI" className="h-8" />
             <h1 className="text-2xl font-bold text-primary">Painel do Funcionário</h1>
           </div>
           <div className="flex items-center gap-3">

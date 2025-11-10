@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Activity, Users, FileText, Shield } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import logoInovai from "@/assets/logo-inovai.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ const Index = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <div className="flex justify-center mb-6">
-            <Activity className="h-20 w-20 text-primary" />
+            <img src={logoInovai} alt="InovAI" className="h-24" />
           </div>
           <h1 className="text-5xl font-bold text-foreground mb-4">
             Sistema de Gestão de Exames Médicos

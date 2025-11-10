@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import StaffList from "./StaffList";
 import AddStaffDialog from "./AddStaffDialog";
 import ExamTypesList from "./ExamTypesList";
+import logoInovai from "@/assets/logo-inovai.png";
 
 interface AdminDashboardProps {
   user: User;
@@ -59,7 +60,7 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
       <header className="bg-card border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Activity className="h-8 w-8 text-primary" />
+            <img src={logoInovai} alt="InovAI" className="h-8" />
             <h1 className="text-2xl font-bold text-primary">Painel Administrativo</h1>
           </div>
           <div className="flex items-center gap-3">
