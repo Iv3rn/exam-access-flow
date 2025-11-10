@@ -5,7 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, ShieldOff } from "lucide-react";
+import { Shield, ShieldOff, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Staff {
   id: string;
@@ -25,6 +35,8 @@ interface StaffListProps {
 const StaffList = ({ onUpdate }: StaffListProps) => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -89,6 +101,39 @@ const StaffList = ({ onUpdate }: StaffListProps) => {
     onUpdate();
   };
 
+  const handleDeleteClick = (member: Staff) => {
+    setStaffToDelete(member);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!staffToDelete) return;
+
+    const { error } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("id", staffToDelete.id);
+
+    if (error) {
+      toast({
+        title: "Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Funcionário excluído",
+      description: "O funcionário foi removido com sucesso.",
+    });
+
+    setDeleteDialogOpen(false);
+    setStaffToDelete(null);
+    fetchStaff();
+    onUpdate();
+  };
+
   if (loading) {
     return <p className="text-muted-foreground">Carregando...</p>;
   }
@@ -121,23 +166,50 @@ const StaffList = ({ onUpdate }: StaffListProps) => {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleStaffStatus(member.id, member.active)}
-                  >
-                    {member.active ? (
-                      <ShieldOff className="h-4 w-4" />
-                    ) : (
-                      <Shield className="h-4 w-4" />
-                    )}
-                  </Button>
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleStaffStatus(member.id, member.active)}
+                    >
+                      {member.active ? (
+                        <ShieldOff className="h-4 w-4" />
+                      ) : (
+                        <Shield className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteClick(member)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o funcionário{" "}
+              <strong>{staffToDelete?.profiles?.full_name}</strong>? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
