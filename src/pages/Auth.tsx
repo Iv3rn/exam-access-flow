@@ -10,12 +10,10 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import logoInovai from "@/assets/logo-inovai.png";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [isPatientLogin, setIsPatientLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -43,7 +41,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isLogin && isPatientLogin) {
+      if (isPatientLogin) {
         // Patient login with CPF
         const { data, error } = await supabase.functions.invoke('patient-login', {
           body: { cpf, password }
@@ -63,7 +61,7 @@ const Auth = () => {
         toast({
           title: "Login realizado com sucesso!",
         });
-      } else if (isLogin) {
+      } else {
         // Staff/Admin login with email
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -75,25 +73,6 @@ const Auth = () => {
         toast({
           title: "Login realizado com sucesso!",
         });
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-            },
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Cadastro realizado!",
-          description: "Você pode fazer login agora.",
-        });
-        setIsLogin(true);
       }
     } catch (error: any) {
       toast({
@@ -118,46 +97,31 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl">Sistema de Exames Médicos</CardTitle>
           <CardDescription>
-            {isLogin ? "Entre com suas credenciais" : "Crie sua conta"}
+            Entre com suas credenciais
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLogin && (
-            <div className="flex gap-2 mb-4">
-              <Button
-                type="button"
-                variant={!isPatientLogin ? "default" : "outline"}
-                onClick={() => setIsPatientLogin(false)}
-                className="flex-1"
-              >
-                Acesso Administrativo
-              </Button>
-              <Button
-                type="button"
-                variant={isPatientLogin ? "default" : "outline"}
-                onClick={() => setIsPatientLogin(true)}
-                className="flex-1"
-              >
-                Paciente
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2 mb-4">
+            <Button
+              type="button"
+              variant={!isPatientLogin ? "default" : "outline"}
+              onClick={() => setIsPatientLogin(false)}
+              className="flex-1"
+            >
+              Acesso Administrativo
+            </Button>
+            <Button
+              type="button"
+              variant={isPatientLogin ? "default" : "outline"}
+              onClick={() => setIsPatientLogin(true)}
+              className="flex-1"
+            >
+              Paciente
+            </Button>
+          </div>
           
           <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nome Completo</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-            
-            {isLogin && isPatientLogin ? (
+            {isPatientLogin ? (
               <div className="space-y-2">
                 <Label htmlFor="cpf">CPF</Label>
                 <Input
@@ -192,23 +156,9 @@ const Auth = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Carregando..." : isLogin ? "Entrar" : "Cadastrar"}
+              {loading ? "Carregando..." : "Entrar"}
             </Button>
           </form>
-          
-          {!isPatientLogin && (
-            <div className="mt-4 text-center">
-              <Button
-                variant="link"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm"
-              >
-                {isLogin
-                  ? "Não tem conta? Cadastre-se"
-                  : "Já tem conta? Faça login"}
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
