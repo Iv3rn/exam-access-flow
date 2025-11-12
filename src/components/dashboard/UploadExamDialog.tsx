@@ -73,33 +73,18 @@ const UploadExamDialog = ({ open, onOpenChange, patient, onSuccess }: UploadExam
         throw new Error("Usuário não autenticado");
       }
 
-      // Convert file to base64
       const fileExt = file.name.split(".").pop();
       const fileName = `${patient.id}/${Date.now()}.${fileExt}`;
-      
-      const reader = new FileReader();
-      const fileDataPromise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = (reader.result as string).split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
 
-      const fileData = await fileDataPromise;
-
-      // Upload to MinIO via edge function
-      const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-to-minio', {
-        body: {
-          fileName,
-          fileData,
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('exam-files')
+        .upload(fileName, file, {
           contentType: file.type,
-        },
-      });
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
-      if (!uploadData?.success) throw new Error(uploadData?.error || 'Failed to upload file');
 
       // Create exam record
       const { error: examError } = await supabase.from("exams").insert({
@@ -115,7 +100,7 @@ const UploadExamDialog = ({ open, onOpenChange, patient, onSuccess }: UploadExam
 
       toast({
         title: "Exame enviado!",
-        description: "O exame foi carregado com sucesso no MinIO.",
+        description: "O exame foi carregado com sucesso.",
       });
 
       setExamType("");
