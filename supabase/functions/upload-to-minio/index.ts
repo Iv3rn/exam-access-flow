@@ -6,6 +6,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Detecta automaticamente HTTP/HTTPS e porta correta
+function resolveConnectionSettings(endpoint: string | undefined) {
+  if (!endpoint) {
+    throw new Error("MINIO_ENDPOINT não definido.");
+  }
+
+  const isSecure = endpoint.startsWith("https://");
+  const cleanEndpoint = endpoint.replace("https://", "").replace("http://", "");
+
+  return {
+    endPoint: cleanEndpoint,
+    port: isSecure ? 443 : 9000,
+    useSSL: isSecure,
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -14,54 +30,57 @@ serve(async (req) => {
   try {
     const { fileName, fileData, contentType } = await req.json();
 
-    console.log('Uploading file to MinIO:', fileName);
+    console.log("Uploading file to MinIO:", fileName);
 
-    // Configure S3 client for MinIO
+    // Configura o cliente S3 automaticamente conforme protocolo
+    const endpoint = Deno.env.get("MINIO_ENDPOINT") || "";
+    const { endPoint, port, useSSL } = resolveConnectionSettings(endpoint);
+
     const s3Client = new S3Client({
-      endPoint: Deno.env.get('MINIO_ENDPOINT')?.replace('https://', '').replace('http://', '') || '',
-      port: 443,
-      useSSL: true,
-      region: 'us-east-1',
-      accessKey: Deno.env.get('MINIO_ACCESS_KEY') || '',
-      secretKey: Deno.env.get('MINIO_SECRET_KEY') || '',
-      bucket: Deno.env.get('MINIO_BUCKET_NAME') || '',
+      endPoint,
+      port,
+      useSSL,
+      region: "us-east-1",
+      accessKey: Deno.env.get("MINIO_ACCESS_KEY") || "",
+      secretKey: Deno.env.get("MINIO_SECRET_KEY") || "",
+      bucket: Deno.env.get("MINIO_BUCKET_NAME") || "",
       pathStyle: true,
     });
 
-    // Convert base64 to Uint8Array
+    // Converte Base64 para bytes
     const binaryString = atob(fileData);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    // Upload to MinIO using putObject method
+    // Faz upload no MinIO
     await s3Client.putObject(fileName, bytes, {
       metadata: {
-        'Content-Type': contentType,
+        "Content-Type": contentType,
       },
     });
 
-    console.log('File uploaded successfully:', fileName);
+    console.log("File uploaded successfully:", fileName);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         filePath: fileName,
-        message: 'File uploaded to MinIO successfully' 
+        message: "File uploaded to MinIO successfully",
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error('Error uploading to MinIO:', error);
+    console.error("Error uploading to MinIO:", error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Failed to upload file to MinIO',
-        details: error.toString()
+      JSON.stringify({
+        error: error.message || "Failed to upload file to MinIO",
+        details: error.toString(),
       }),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
