@@ -17,6 +17,8 @@ serve(async (req) => {
     console.log('Downloading file from MinIO:', filePath);
 
     // Configure S3 client for MinIO
+    const bucket = Deno.env.get('MINIO_BUCKET_NAME') || 'examescsne';
+    
     const s3Client = new S3Client({
       endPoint: Deno.env.get('MINIO_ENDPOINT')?.replace('https://', '').replace('http://', '') || '',
       port: 443,
@@ -24,7 +26,7 @@ serve(async (req) => {
       region: 'us-east-1',
       accessKey: Deno.env.get('MINIO_ACCESS_KEY') || '',
       secretKey: Deno.env.get('MINIO_SECRET_KEY') || '',
-      bucket: Deno.env.get('MINIO_BUCKET_NAME') || '',
+      bucket,
       pathStyle: true,
     });
 

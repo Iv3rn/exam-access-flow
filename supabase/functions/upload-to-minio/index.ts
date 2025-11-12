@@ -36,6 +36,8 @@ serve(async (req) => {
     const endpoint = Deno.env.get("MINIO_ENDPOINT") || "";
     const { endPoint, port, useSSL } = resolveConnectionSettings(endpoint);
 
+    const bucket = Deno.env.get("MINIO_BUCKET_NAME") || "examescsne";
+    
     const s3Client = new S3Client({
       endPoint,
       port,
@@ -43,7 +45,7 @@ serve(async (req) => {
       region: "us-east-1",
       accessKey: Deno.env.get("MINIO_ACCESS_KEY") || "",
       secretKey: Deno.env.get("MINIO_SECRET_KEY") || "",
-      bucket: Deno.env.get("MINIO_BUCKET_NAME") || "",
+      bucket,
       pathStyle: true,
     });
 
