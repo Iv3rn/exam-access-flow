@@ -11,18 +11,32 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Detect HTTP/HTTPS and correct port from endpoint (same logic as upload)
+  function resolveConnectionSettings(endpoint: string | undefined) {
+    if (!endpoint) throw new Error('MINIO_ENDPOINT não definido.');
+    const isSecure = endpoint.startsWith('https://');
+    const cleanEndpoint = endpoint.replace('https://', '').replace('http://', '');
+    return {
+      endPoint: cleanEndpoint,
+      port: isSecure ? 443 : 9000,
+      useSSL: isSecure,
+    } as const;
+  }
+
   try {
     const { filePath } = await req.json();
 
     console.log('Downloading file from MinIO:', filePath);
 
     // Configure S3 client for MinIO
+    const endpoint = Deno.env.get('MINIO_ENDPOINT') || '';
+    const { endPoint, port, useSSL } = resolveConnectionSettings(endpoint);
     const bucket = Deno.env.get('MINIO_BUCKET_NAME') || 'examescsne';
-    
+
     const s3Client = new S3Client({
-      endPoint: Deno.env.get('MINIO_ENDPOINT')?.replace('https://', '').replace('http://', '') || '',
-      port: 443,
-      useSSL: true,
+      endPoint,
+      port,
+      useSSL,
       region: 'us-east-1',
       accessKey: Deno.env.get('MINIO_ACCESS_KEY') || '',
       secretKey: Deno.env.get('MINIO_SECRET_KEY') || '',
