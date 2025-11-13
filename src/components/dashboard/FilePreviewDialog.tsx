@@ -23,38 +23,26 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
       loadFile();
     }
     return () => {
-      if (fileUrl) {
-        URL.revokeObjectURL(fileUrl);
-      }
+      if (fileUrl) URL.revokeObjectURL(fileUrl);
     };
   }, [open, filePath]);
 
   const loadFile = async () => {
     try {
       setLoading(true);
-      
-      // Download from MinIO via edge function
-      const { data, error } = await supabase.functions.invoke('download-from-minio', {
+
+      // 🔥 NOVO → chamamos uma edge function que retorna uma Signed URL
+      const { data, error } = await supabase.functions.invoke("get-minio-url", {
         body: { filePath },
       });
 
       if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Failed to download file');
+      if (!data?.signedUrl) throw new Error("URL inválida retornada do servidor.");
 
-      // Convert base64 to blob
-      const base64 = data.fileData;
-      const binaryString = atob(base64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const blob = new Blob([bytes], { type: fileType });
-      const url = URL.createObjectURL(blob);
-      
-      setFileUrl(url);
+      setFileUrl(data.signedUrl);
     } catch (error: any) {
       toast({
-        title: "Erro ao carregar arquivo",
+        title: "Erro ao abrir arquivo",
         description: error.message,
         variant: "destructive",
       });
@@ -69,19 +57,12 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
       const a = document.createElement("a");
       a.href = fileUrl;
       a.download = fileName;
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Download iniciado",
-        description: "O arquivo está sendo baixado.",
-      });
     }
   };
 
-  const isImage = fileType.startsWith("image/");
   const isPDF = fileType === "application/pdf";
+  const isImage = fileType.startsWith("image/");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,6 +76,7 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
             </Button>
           </div>
         </DialogHeader>
+
         <div className="flex items-center justify-center min-h-[400px] bg-muted rounded-lg overflow-auto">
           {loading ? (
             <div className="flex flex-col items-center gap-2">
@@ -104,12 +86,9 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
           ) : (
             <>
               {isImage && fileUrl && (
-                <img 
-                  src={fileUrl} 
-                  alt={fileName} 
-                  className="max-w-full max-h-[70vh] object-contain"
-                />
+                <img src={fileUrl} alt={fileName} className="max-w-full max-h-[70vh] object-contain" />
               )}
+
               {isPDF && fileUrl && (
                 <iframe
                   src={fileUrl}
@@ -118,13 +97,14 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
                   sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
               )}
+
               {!isImage && !isPDF && (
                 <div className="text-center p-8">
                   <p className="text-muted-foreground">
-                    Visualização não disponível para este tipo de arquivo.
+                    Visualização não disponível.
                   </p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Clique em "Baixar" para fazer o download.
+                    Clique em “Baixar” para abrir o arquivo.
                   </p>
                 </div>
               )}
