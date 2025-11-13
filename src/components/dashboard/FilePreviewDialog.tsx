@@ -115,6 +115,7 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
                   src={fileUrl}
                   className="w-full h-[70vh]"
                   title={fileName}
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
               )}
               {!isImage && !isPDF && (

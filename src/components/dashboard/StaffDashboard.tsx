@@ -20,6 +20,7 @@ const StaffDashboard = ({ user }: StaffDashboardProps) => {
   const [examCount, setExamCount] = useState(0);
   const [reportCount, setReportCount] = useState(0);
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -118,13 +119,16 @@ const StaffDashboard = ({ user }: StaffDashboardProps) => {
           </Button>
         </div>
 
-        <PatientList onUpdate={fetchCounts} />
+        <PatientList key={refreshKey} onUpdate={fetchCounts} />
       </main>
 
       <AddPatientDialog
         open={showAddPatient}
         onOpenChange={setShowAddPatient}
-        onSuccess={fetchCounts}
+        onSuccess={() => {
+          fetchCounts();
+          setRefreshKey(prev => prev + 1);
+        }}
       />
     </div>
   );
