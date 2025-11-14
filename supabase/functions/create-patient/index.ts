@@ -24,7 +24,7 @@ serve(async (req) => {
     )
 
     const body = await req.json()
-    const { cpf, full_name, email, phone, password, created_by } = body
+    const { cpf, full_name, email, phone, gender, password, created_by } = body
 
     // Validate inputs
     if (!cpf || !full_name || !password) {
@@ -75,6 +75,7 @@ serve(async (req) => {
         full_name,
         email,
         phone,
+        gender,
         user_id: authUser.user.id,
         created_by,
       })

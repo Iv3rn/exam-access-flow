@@ -3,7 +3,8 @@ import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Users, UserPlus, Activity, FileText } from "lucide-react";
+import { LogOut, Users, UserPlus, Activity, FileText, Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -118,11 +119,27 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           </Card>
         </div>
 
-        <div className="space-y-8">
-          <ClinicLogoUpload />
-          <StaffList onUpdate={fetchStaffCount} />
-          <ExamTypesList onUpdate={fetchExamTypesCount} />
-        </div>
+        <Tabs defaultValue="management" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="management">
+              <Users className="h-4 w-4 mr-2" />
+              Gerenciamento
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="h-4 w-4 mr-2" />
+              Configurações
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="management" className="space-y-8 mt-6">
+            <StaffList onUpdate={fetchStaffCount} />
+            <ExamTypesList onUpdate={fetchExamTypesCount} />
+          </TabsContent>
+          
+          <TabsContent value="settings" className="space-y-8 mt-6">
+            <ClinicLogoUpload />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <AddStaffDialog

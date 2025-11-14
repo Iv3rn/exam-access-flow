@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, ShieldOff, Trash2 } from "lucide-react";
+import { Shield, ShieldOff, Trash2, Crown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,6 +101,47 @@ const StaffList = ({ onUpdate }: StaffListProps) => {
     onUpdate();
   };
 
+  const promoteToAdmin = async (userId: string, userName: string) => {
+    // Verifica se já é admin
+    const { data: existingAdmin } = await supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (existingAdmin) {
+      toast({
+        title: "Aviso",
+        description: "Este usuário já possui permissão de administrador.",
+        variant: "default",
+      });
+      return;
+    }
+
+    // Adiciona role de admin
+    const { error } = await supabase
+      .from("user_roles")
+      .insert({ user_id: userId, role: "admin", active: true });
+
+    if (error) {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Administrador adicionado",
+      description: `${userName} agora tem permissões de administrador.`,
+    });
+
+    fetchStaff();
+    onUpdate();
+  };
+
   const handleDeleteClick = (member: Staff) => {
     setStaffToDelete(member);
     setDeleteDialogOpen(true);
@@ -167,6 +208,14 @@ const StaffList = ({ onUpdate }: StaffListProps) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => promoteToAdmin(member.user_id, member.profiles?.full_name)}
+                      title="Promover a Administrador"
+                    >
+                      <Crown className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

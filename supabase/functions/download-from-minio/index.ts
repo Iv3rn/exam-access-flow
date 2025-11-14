@@ -42,10 +42,10 @@ serve(async (req) => {
       pathStyle: true,
     });
 
-    const obj = await s3.getObject(filePath);
+    const obj = await s3Client.getObject(filePath);
     const bytes = await obj.arrayBuffer();
 
-    const contentType = obj.metadata["Content-Type"] ?? "application/pdf";
+    const contentType = obj.headers.get("Content-Type") ?? "application/pdf";
 
     return new Response(JSON.stringify({
       success: true,
@@ -54,7 +54,8 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" }});
 
   } catch (e) {
-    return new Response(JSON.stringify({ success: false, error: e.message }), {
+    const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';
+    return new Response(JSON.stringify({ success: false, error: errorMessage }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

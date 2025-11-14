@@ -110,6 +110,7 @@ export type Database = {
           created_by: string
           email: string | null
           full_name: string
+          gender: string | null
           id: string
           phone: string | null
           updated_at: string
@@ -121,6 +122,7 @@ export type Database = {
           created_by: string
           email?: string | null
           full_name: string
+          gender?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
@@ -132,6 +134,7 @@ export type Database = {
           created_by?: string
           email?: string | null
           full_name?: string
+          gender?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
