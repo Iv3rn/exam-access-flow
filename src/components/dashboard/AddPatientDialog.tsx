@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface AddPatientDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ const AddPatientDialog = ({ open, onOpenChange, onSuccess }: AddPatientDialogPro
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState<"M" | "F">("M");
   const [tempPassword, setTempPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -38,6 +40,7 @@ const AddPatientDialog = ({ open, onOpenChange, onSuccess }: AddPatientDialogPro
           full_name: fullName,
           email,
           phone,
+          gender,
           password: tempPassword,
           created_by: user.id,
         }
@@ -55,6 +58,7 @@ const AddPatientDialog = ({ open, onOpenChange, onSuccess }: AddPatientDialogPro
       setFullName("");
       setEmail("");
       setPhone("");
+      setGender("M");
       setTempPassword("");
       onOpenChange(false);
       onSuccess();
@@ -114,6 +118,21 @@ const AddPatientDialog = ({ open, onOpenChange, onSuccess }: AddPatientDialogPro
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Sexo</Label>
+            <RadioGroup value={gender} onValueChange={(value) => setGender(value as "M" | "F")}>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="M" id="male" />
+                  <Label htmlFor="male" className="font-normal cursor-pointer">Masculino</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="F" id="female" />
+                  <Label htmlFor="female" className="font-normal cursor-pointer">Feminino</Label>
+                </div>
+              </div>
+            </RadioGroup>
           </div>
           <div className="space-y-2">
             <Label htmlFor="tempPassword">Senha Temporária</Label>
