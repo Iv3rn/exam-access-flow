@@ -19,31 +19,37 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
   const { toast } = useToast();
 
   useEffect(() => {
-    if (open) {
-      loadFile();
-    }
-    return () => {
-      if (fileUrl) URL.revokeObjectURL(fileUrl);
-    };
+    if (open) loadFile();
+    return () => fileUrl && URL.revokeObjectURL(fileUrl);
   }, [open, filePath]);
 
   const loadFile = async () => {
     try {
       setLoading(true);
 
-      // 🔥 NOVO → chamamos uma edge function que retorna uma Signed URL
-      const { data, error } = await supabase.functions.invoke("get-minio-url", {
-        body: { filePath },
+      const { data, error } = await supabase.functions.invoke("download-from-minio", {
+        body: { filePath }
       });
 
       if (error) throw error;
-      if (!data?.signedUrl) throw new Error("URL inválida retornada do servidor.");
+      if (!data?.fileData) throw new Error("Arquivo inválido");
 
-      setFileUrl(data.signedUrl);
-    } catch (error: any) {
+      const base64 = data.fileData;
+      const byteCharacters = atob(base64);
+      const bytes = new Uint8Array(byteCharacters.length);
+
+      for (let i = 0; i < byteCharacters.length; i++) {
+        bytes[i] = byteCharacters.charCodeAt(i);
+      }
+
+      const blob = new Blob([bytes], { type: fileType });
+      const url = URL.createObjectURL(blob);
+
+      setFileUrl(url);
+    } catch (err: any) {
       toast({
         title: "Erro ao abrir arquivo",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
       onOpenChange(false);
@@ -53,12 +59,12 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
   };
 
   const handleDownload = () => {
-    if (fileUrl) {
-      const a = document.createElement("a");
-      a.href = fileUrl;
-      a.download = fileName;
-      a.click();
-    }
+    if (!fileUrl) return;
+
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.download = fileName;
+    a.click();
   };
 
   const isPDF = fileType === "application/pdf";
@@ -71,8 +77,7 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
           <div className="flex items-center justify-between">
             <DialogTitle>{fileName}</DialogTitle>
             <Button size="sm" onClick={handleDownload} disabled={!fileUrl}>
-              <Download className="h-4 w-4 mr-2" />
-              Baixar
+              <Download className="h-4 w-4 mr-2" /> Baixar
             </Button>
           </div>
         </DialogHeader>
@@ -81,32 +86,14 @@ const FilePreviewDialog = ({ open, onOpenChange, filePath, fileType, fileName }:
           {loading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Carregando arquivo...</p>
+              <p>Carregando arquivo...</p>
             </div>
           ) : (
             <>
-              {isImage && fileUrl && (
-                <img src={fileUrl} alt={fileName} className="max-w-full max-h-[70vh] object-contain" />
-              )}
-
-              {isPDF && fileUrl && (
-                <iframe
-                  src={fileUrl}
-                  className="w-full h-[70vh]"
-                  title={fileName}
-                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                />
-              )}
-
+              {isImage && fileUrl && <img src={fileUrl} className="max-w-full max-h-[70vh] object-contain" />}
+              {isPDF && fileUrl && <iframe src={fileUrl} className="w-full h-[70vh]" title={fileName} />}
               {!isImage && !isPDF && (
-                <div className="text-center p-8">
-                  <p className="text-muted-foreground">
-                    Visualização não disponível.
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Clique em “Baixar” para abrir o arquivo.
-                  </p>
-                </div>
+                <div className="text-center p-8">Visualização não disponível.</div>
               )}
             </>
           )}
