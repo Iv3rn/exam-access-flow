@@ -102,7 +102,7 @@ const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess, examId }: 
       if (!uploadData?.success) throw new Error(uploadData?.error || 'Failed to upload file');
 
       // Create report record
-      const { error: reportError } = await supabase.from("reports").insert({
+      const { data: reportData, error: reportError } = await supabase.from("reports").insert({
         patient_id: patient.id,
         exam_id: selectedExamId || null,
         title,
@@ -110,9 +110,22 @@ const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess, examId }: 
         file_path: fileName,
         file_type: file.type,
         uploaded_by: user.id,
-      });
+      }).select().single();
 
       if (reportError) throw reportError;
+
+      // Log activity
+      await supabase.from("activity_logs").insert({
+        user_id: user.id,
+        action: "upload",
+        entity_type: "report",
+        entity_id: reportData.id,
+        details: {
+          patient_name: patient.full_name,
+          title,
+          file_name: file.name,
+        },
+      });
 
       toast({
         title: "Laudo enviado!",
@@ -187,12 +200,12 @@ const UploadReportDialog = ({ open, onOpenChange, patient, onSuccess, examId }: 
             <Input
               id="file"
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               required
             />
             <p className="text-sm text-muted-foreground">
-              Formatos aceitos: PDF, DOC, DOCX
+              Formatos aceitos: PDF, DOC, DOCX, JPG, PNG
             </p>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>

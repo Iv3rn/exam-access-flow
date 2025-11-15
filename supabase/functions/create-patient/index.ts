@@ -68,7 +68,7 @@ serve(async (req) => {
     }
 
     // Create patient record
-    const { error: patientError } = await supabase
+    const { data: patient, error: patientError } = await supabase
       .from('patients')
       .insert({
         cpf,
@@ -79,12 +79,26 @@ serve(async (req) => {
         user_id: authUser.user.id,
         created_by,
       })
+      .select()
+      .single()
 
     if (patientError) {
       // Rollback: delete auth user if patient creation fails
       await supabase.auth.admin.deleteUser(authUser.user.id)
       throw new Error(`Erro ao criar paciente: ${patientError.message}`)
     }
+
+    // Log activity
+    await supabase.from('activity_logs').insert({
+      user_id: created_by,
+      action: 'create',
+      entity_type: 'patient',
+      entity_id: patient.id,
+      details: {
+        patient_name: full_name,
+        patient_cpf: cpf,
+      },
+    })
 
     // Assign patient role
     await supabase

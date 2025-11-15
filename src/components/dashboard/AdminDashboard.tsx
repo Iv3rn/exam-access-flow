@@ -12,6 +12,7 @@ import StaffList from "./StaffList";
 import AddStaffDialog from "./AddStaffDialog";
 import ExamTypesList from "./ExamTypesList";
 import ClinicLogoUpload from "./ClinicLogoUpload";
+import PatientFilesView from "./PatientFilesView";
 import logoInovai from "@/assets/logo-inovai.png";
 
 interface AdminDashboardProps {
@@ -120,10 +121,14 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
         </div>
 
         <Tabs defaultValue="management" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-4xl grid-cols-3">
             <TabsTrigger value="management">
               <Users className="h-4 w-4 mr-2" />
               Gerenciamento
+            </TabsTrigger>
+            <TabsTrigger value="files">
+              <FileText className="h-4 w-4 mr-2" />
+              Arquivos
             </TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="h-4 w-4 mr-2" />
@@ -134,6 +139,10 @@ const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <TabsContent value="management" className="space-y-8 mt-6">
             <StaffList onUpdate={fetchStaffCount} />
             <ExamTypesList onUpdate={fetchExamTypesCount} />
+          </TabsContent>
+
+          <TabsContent value="files" className="space-y-8 mt-6">
+            <PatientFilesView />
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-8 mt-6">

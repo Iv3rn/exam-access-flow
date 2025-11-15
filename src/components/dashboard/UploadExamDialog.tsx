@@ -101,16 +101,29 @@ const UploadExamDialog = ({ open, onOpenChange, patient, onSuccess }: UploadExam
       if (!uploadData?.success) throw new Error(uploadData?.error || 'Failed to upload file');
 
       // Create exam record
-      const { error: examError } = await supabase.from("exams").insert({
+      const { data: examData, error: examError } = await supabase.from("exams").insert({
         patient_id: patient.id,
         exam_type: examType,
         description,
         file_path: fileName,
         file_type: file.type,
         uploaded_by: user.id,
-      });
+      }).select().single();
 
       if (examError) throw examError;
+
+      // Log activity
+      await supabase.from("activity_logs").insert({
+        user_id: user.id,
+        action: "upload",
+        entity_type: "exam",
+        entity_id: examData.id,
+        details: {
+          patient_name: patient.full_name,
+          exam_type: examType,
+          file_name: file.name,
+        },
+      });
 
       toast({
         title: "Exame enviado!",
@@ -172,12 +185,12 @@ const UploadExamDialog = ({ open, onOpenChange, patient, onSuccess }: UploadExam
             <Input
               id="file"
               type="file"
-              accept=".jpg,.jpeg,.pdf,.dcm"
+              accept=".jpg,.jpeg,.pdf,.dcm,.png"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               required
             />
             <p className="text-sm text-muted-foreground">
-              Formatos aceitos: JPEG, PDF, DICOM
+              Formatos aceitos: JPEG, PNG, PDF, DICOM
             </p>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
